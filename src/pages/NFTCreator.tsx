@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Palette, Sparkles, Loader2, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const NFTCreator = () => {
   const [form, setForm] = useState({
@@ -29,54 +31,33 @@ const NFTCreator = () => {
     setLoading(true);
     setGeneratedImage(null);
 
-    // Build a detailed prompt for NFT generation
     const prompt = `Create an NFT digital artwork: ${form.subject}. Style: ${form.style}. ${
       form.colors ? `Color palette: ${form.colors}.` : ""
     } ${form.mood ? `Mood: ${form.mood}.` : ""} High quality, suitable for NFT collection, detailed, visually striking, square format.`;
 
     try {
-      // Use placeholder generation for now - will integrate with Lovable AI
-      // Simulating with a timeout for demo purposes
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      // Generate a placeholder SVG as NFT
-      const canvas = document.createElement("canvas");
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext("2d")!;
-      
-      // Create a gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-      const hue1 = Math.random() * 360;
-      const hue2 = (hue1 + 120) % 360;
-      gradient.addColorStop(0, `hsl(${hue1}, 80%, 30%)`);
-      gradient.addColorStop(1, `hsl(${hue2}, 80%, 20%)`);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 512, 512);
-      
-      // Add geometric shapes
-      for (let i = 0; i < 8; i++) {
-        ctx.beginPath();
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const size = 30 + Math.random() * 100;
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${Math.random() * 360}, 70%, 60%, 0.2)`;
-        ctx.fill();
+      const { data, error } = await supabase.functions.invoke("generate-nft", {
+        body: { prompt },
+      });
+
+      if (error) {
+        throw new Error(error.message || "Generation failed");
       }
-      
-      // Add text
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.font = "bold 24px 'Space Grotesk', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(form.subject.slice(0, 30) || "NFT", 256, 256);
-      ctx.font = "14px 'Space Grotesk', sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.fillText(`Style: ${form.style}`, 256, 290);
-      
-      setGeneratedImage(canvas.toDataURL("image/png"));
-    } catch (error) {
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.imageUrl) {
+        setGeneratedImage(data.imageUrl);
+        toast.success("NFT artwork generated!");
+      } else {
+        toast.error("No image was returned");
+      }
+    } catch (error: any) {
       console.error("Generation failed:", error);
+      toast.error(error.message || "Failed to generate NFT artwork");
     } finally {
       setLoading(false);
     }
@@ -198,7 +179,8 @@ const NFTCreator = () => {
           ) : loading ? (
             <div className="text-center space-y-4">
               <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-              <p className="text-muted-foreground">Creating your NFT artwork...</p>
+              <p className="text-muted-foreground">Creating your NFT artwork with AI...</p>
+              <p className="text-xs text-muted-foreground/60">This may take 10-20 seconds</p>
             </div>
           ) : (
             <div className="text-center space-y-3">

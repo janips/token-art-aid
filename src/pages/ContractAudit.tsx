@@ -2,15 +2,15 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
-import { Shield, Loader2, AlertTriangle, CheckCircle2, Info, Copy, Check } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { Shield, Loader2, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuditResult {
   severity: "critical" | "high" | "medium" | "low" | "info";
   title: string;
   description: string;
   suggestion: string;
-  line?: string;
 }
 
 const SAMPLE_CONTRACT = `// SPDX-License-Identifier: MIT
@@ -39,84 +39,6 @@ contract SimpleToken {
     }
 }`;
 
-const analyzeContract = (code: string): AuditResult[] => {
-  const results: AuditResult[] = [];
-
-  if (code.includes("function mint") && !code.includes("onlyOwner") && !code.includes("onlyRole")) {
-    results.push({
-      severity: "critical",
-      title: "Unrestricted Mint Function",
-      description: "The `mint` function has no access control. Anyone can call it to create unlimited tokens, leading to inflation and total loss of value.",
-      suggestion: "Add `onlyOwner` modifier or use OpenZeppelin's `AccessControl` to restrict minting to authorized addresses.",
-    });
-  }
-
-  if (!code.includes("ReentrancyGuard") && (code.includes(".call{value") || code.includes("transfer("))) {
-    results.push({
-      severity: "high",
-      title: "Potential Reentrancy Vulnerability",
-      description: "External calls or transfers found without reentrancy protection. This could allow an attacker to re-enter the contract before state changes complete.",
-      suggestion: "Use OpenZeppelin's `ReentrancyGuard` with the `nonReentrant` modifier on functions that transfer value.",
-    });
-  }
-
-  if (code.includes("require(") && !code.match(/require\([^,]+,\s*"/)) {
-    results.push({
-      severity: "medium",
-      title: "Missing Error Messages in require()",
-      description: "Some `require()` statements don't include error messages, making debugging and user feedback difficult.",
-      suggestion: 'Add descriptive error messages: `require(condition, "Descriptive error message");` or use custom errors for gas efficiency.',
-    });
-  }
-
-  if (!code.includes("event ") && (code.includes("transfer") || code.includes("mint"))) {
-    results.push({
-      severity: "medium",
-      title: "No Events Emitted",
-      description: "State-changing functions don't emit events. This makes it impossible for off-chain applications to track contract activity.",
-      suggestion: "Define and emit events for all state-changing operations: `event Transfer(address indexed from, address indexed to, uint256 value);`",
-    });
-  }
-
-  if (code.includes("pragma solidity") && !code.includes("^0.8")) {
-    results.push({
-      severity: "high",
-      title: "Outdated Solidity Version",
-      description: "Using an older Solidity version may miss important security fixes and optimizations.",
-      suggestion: "Upgrade to `pragma solidity ^0.8.20;` for built-in overflow checks and latest security features.",
-    });
-  }
-
-  if (!code.includes("import") || !code.includes("openzeppelin")) {
-    results.push({
-      severity: "low",
-      title: "Not Using Standard Libraries",
-      description: "The contract implements functionality from scratch instead of using battle-tested libraries.",
-      suggestion: "Consider using OpenZeppelin contracts for standard token implementations (ERC20, ERC721) and common patterns (Ownable, AccessControl).",
-    });
-  }
-
-  if (code.includes("owner") && !code.includes("renounceOwnership") && !code.includes("Ownable")) {
-    results.push({
-      severity: "info",
-      title: "Consider Ownership Management",
-      description: "The contract has an owner pattern but lacks ownership transfer or renouncement capabilities.",
-      suggestion: "Use OpenZeppelin's `Ownable` contract which provides `transferOwnership` and `renounceOwnership` out of the box.",
-    });
-  }
-
-  if (results.length === 0) {
-    results.push({
-      severity: "info",
-      title: "No Major Issues Detected",
-      description: "The static analysis didn't find common vulnerability patterns. However, this doesn't guarantee the contract is bug-free.",
-      suggestion: "Consider a professional audit for production deployments. Test thoroughly with unit tests and fuzzing.",
-    });
-  }
-
-  return results;
-};
-
 const severityConfig = {
   critical: { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30", icon: <AlertTriangle className="w-5 h-5" /> },
   high: { color: "text-neon-orange", bg: "bg-neon-orange/10", border: "border-neon-orange/30", icon: <AlertTriangle className="w-5 h-5" /> },
@@ -129,15 +51,37 @@ const ContractAudit = () => {
   const [code, setCode] = useState("");
   const [results, setResults] = useState<AuditResult[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [pasted, setPasted] = useState(false);
 
   const handleAudit = async () => {
     setLoading(true);
     setResults(null);
-    // Simulate processing delay
-    await new Promise((r) => setTimeout(r, 1500));
-    setResults(analyzeContract(code));
-    setLoading(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("audit-contract", {
+        body: { code },
+      });
+
+      if (error) {
+        throw new Error(error.message || "Audit failed");
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.findings) {
+        setResults(data.findings);
+        toast.success(`Audit complete — ${data.findings.length} finding(s)`);
+      } else {
+        toast.error("No audit results returned");
+      }
+    } catch (error: any) {
+      console.error("Audit failed:", error);
+      toast.error(error.message || "Failed to audit contract");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadSample = () => {
@@ -148,7 +92,7 @@ const ContractAudit = () => {
   return (
     <PageLayout
       title="Smart Contract Audit"
-      subtitle="Paste your Solidity smart contract and get instant security analysis"
+      subtitle="Paste your Solidity smart contract and get AI-powered security analysis"
     >
       <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-8">
         {/* Input */}
@@ -181,7 +125,7 @@ const ContractAudit = () => {
             disabled={!code.trim() || loading}
           >
             {loading ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Analyzing...</>
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Analyzing with AI...</>
             ) : (
               <><Shield className="w-4 h-4 mr-2" /> Audit Contract</>
             )}
@@ -206,7 +150,8 @@ const ContractAudit = () => {
                 className="flex flex-col items-center justify-center h-64 gap-4"
               >
                 <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-muted-foreground text-sm">Scanning for vulnerabilities...</p>
+                <p className="text-muted-foreground text-sm">AI is analyzing your contract...</p>
+                <p className="text-xs text-muted-foreground/60">This may take 10-15 seconds</p>
               </motion.div>
             ) : results ? (
               <motion.div
@@ -269,7 +214,7 @@ const ContractAudit = () => {
                   <Shield className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <p className="text-muted-foreground text-sm text-center">
-                  Paste your contract and click Audit to get security analysis
+                  Paste your contract and click Audit to get AI-powered security analysis
                 </p>
               </motion.div>
             )}

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Cpu, Shield, Palette } from "lucide-react";
+import { ArrowRight, Cpu, Shield } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -66,13 +66,6 @@ const HeroSection = () => {
             description="AI-guided token creation. Answer questions and get a production-ready smart contract for utility, security, NFT, or stablecoin tokens."
             href="/launchpad"
             glowClass="glow-cyan border-glow-cyan"
-          />
-          <ServiceCard
-            icon={<Palette className="w-6 h-6" />}
-            title="NFT Creator"
-            description="Describe your vision and let AI generate unique NFT artwork. Customize styles, colors, and themes to bring your digital art to life."
-            href="/nft-creator"
-            glowClass="glow-purple border-glow-purple"
           />
           <ServiceCard
             icon={<Shield className="w-6 h-6" />}

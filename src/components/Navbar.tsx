@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { label: "Token Launchpad", href: "/launchpad" },
-  { label: "NFT Creator", href: "/nft-creator" },
   { label: "Contract Audit", href: "/audit" },
 ];
 

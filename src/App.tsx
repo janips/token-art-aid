@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import TokenLaunchpad from "./pages/TokenLaunchpad";
-import NFTCreator from "./pages/NFTCreator";
+
 import ContractAudit from "./pages/ContractAudit";
 import NotFound from "./pages/NotFound";
 
@@ -22,7 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/launchpad" element={<TokenLaunchpad />} />
-          <Route path="/nft-creator" element={<NFTCreator />} />
+          
           <Route path="/audit" element={<ContractAudit />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

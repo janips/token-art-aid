@@ -68,13 +68,6 @@ const HeroSection = () => {
             glowClass="glow-cyan border-glow-cyan"
           />
           <ServiceCard
-            icon={<Palette className="w-6 h-6" />}
-            title="NFT Creator"
-            description="Describe your vision and let AI generate unique NFT artwork. Customize styles, colors, and themes to bring your digital art to life."
-            href="/nft-creator"
-            glowClass="glow-purple border-glow-purple"
-          />
-          <ServiceCard
             icon={<Shield className="w-6 h-6" />}
             title="Smart Contract Audit"
             description="Paste your Solidity contract and receive instant AI-powered security analysis with improvement suggestions and best practices."

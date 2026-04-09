@@ -35,7 +35,7 @@ const HeroSection = () => {
           <p className="text-sm text-muted-foreground mb-2">A subdivision of <a href="https://l2blockchain.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">L2 Blockchain</a></p>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Create tokens, generate NFT art, and audit smart contracts — all powered by
+            Create tokens and audit smart contracts — all powered by
             artificial intelligence. Your complete Web3 development toolkit.
           </p>
 
@@ -58,7 +58,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="grid md:grid-cols-3 gap-6 mt-24 max-w-5xl mx-auto"
+          className="grid md:grid-cols-2 gap-8 mt-24 max-w-3xl mx-auto"
         >
           <ServiceCard
             icon={<Cpu className="w-6 h-6" />}

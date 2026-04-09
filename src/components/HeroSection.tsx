@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Cpu, Shield, Palette } from "lucide-react";
+import { ArrowRight, Cpu, Shield } from "lucide-react";
 
 const HeroSection = () => {
   return (

@@ -21,7 +21,10 @@ const Navbar = () => {
           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center glow-cyan">
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold font-display text-gradient-primary">ChainForge AI</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-lg font-bold font-display text-gradient-primary">ContractForge AI</span>
+            <span className="text-[10px] text-muted-foreground tracking-wide">powered by <a href="https://l2blockchain.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">l2blockchain.com</a></span>
+          </div>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

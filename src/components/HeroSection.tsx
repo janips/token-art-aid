@@ -32,6 +32,7 @@ const HeroSection = () => {
             <br />
             with <span className="text-gradient-primary">AI</span>
           </h1>
+          <p className="text-sm text-muted-foreground mb-2">A subdivision of <a href="https://l2blockchain.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">L2 Blockchain</a></p>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Create tokens, generate NFT art, and audit smart contracts — all powered by
